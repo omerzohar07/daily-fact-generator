@@ -1,0 +1,5 @@
+.env
+__pycache__/
+fact.txt
+*.mp3
+*.mp4
