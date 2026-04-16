@@ -1,23 +1,30 @@
 # Use a stable python slim image
 FROM python:3.11-slim
 
-# 1. Install FFmpeg (Required for MoviePy) and other system dependencies
+# 1. Install FFmpeg AND ImageMagick (Both are required for subtitles)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    imagemagick \
     libmagic1 \
+    fonts-freefont-ttf \
+    fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Set the working directory
+# 2. Fix ImageMagick security policy (This MUST happen after installing imagemagick)
+# This allows MoviePy to use the 'label' and 'caption' methods for subtitles
+RUN sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-*/policy.xml
+
+# 3. Set the working directory
 WORKDIR /app
 
-# 3. Copy requirements first (optimizes caching)
+# 4. Copy requirements first (optimizes caching so re-runs are faster)
 COPY requirements.txt .
 
-# 4. Install Python dependencies
+# 5. Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy the rest of your project code
+# 6. Copy the rest of your project code
 COPY . .
 
-# 6. Run the script
+# 7. Run the script
 CMD ["python", "run_agent.py"]
