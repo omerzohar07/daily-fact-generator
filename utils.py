@@ -5,11 +5,13 @@ from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 from moviepy.video.fx.Crop import Crop
 import requests
 import os
-
+from retry import retry
 
 TELEGRAM_KEY = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = 5793111830
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+IS_LOCAL_DEBUGGING = os.getenv("LOCAL_DEBUGGING") == "true"
 
+@retry(tries=3, delay=30, backoff=1)
 def send_to_telegram(video_path, caption="New Mystery Video!"):
     token = TELEGRAM_KEY
     chat_id = TELEGRAM_CHAT_ID
@@ -58,7 +60,7 @@ def add_subtitles(video_clip, audio_path):
                 color='yellow',
                 stroke_color='black',
                 stroke_width=3,
-                method='caption',         # 'caption' handles wrapping and boundaries better than 'label'
+                method='label',         
                 size=(safe_width, None),  # This forces a horizontal boundary
                 text_align='center'            # Centers the text within that boundary
             ).with_start(start).with_duration(duration).with_position(('center', video_height / 2))
@@ -67,7 +69,7 @@ def add_subtitles(video_clip, audio_path):
 
     return CompositeVideoClip([video_clip] + subtitle_clips)
 
-def merge_fact_video(video_input_path, audio_input_path, output_path="final_vertical_short.mp4"):
+def merge_fact_video(video_input_path, audio_input_path, output_path):
     try:
         video = VideoFileClip(video_input_path)
         audio = AudioFileClip(audio_input_path)
@@ -94,6 +96,11 @@ def merge_fact_video(video_input_path, audio_input_path, output_path="final_vert
         
         audio_duration = audio.duration
         video_duration = video_vertical.duration
+
+        # If in local mode, we force a 5-second limit
+        if IS_LOCAL_DEBUGGING:
+            print("--- Local Mode: Capping video to 5 seconds ---")
+            audio_duration = min(5, audio_duration)
 
         if video_duration < audio_duration:
             print("Error: The gameplay video is shorter than the audio!")

@@ -4,3 +4,5 @@ openai-whisper
 moviepy
 python-dotenv
 imageio-ffmpeg
+requests
+retry
