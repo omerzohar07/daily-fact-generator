@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  video-generator:
+    build: .   
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    # 4. Keeps the container alive during heavy video processing
+    stdin_open: true
+    tty: true
+    # 5. Optional: Gives the container a recognizable name
+    container_name: viral_video_bot

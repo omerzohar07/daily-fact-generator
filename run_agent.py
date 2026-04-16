@@ -1,5 +1,6 @@
 import asyncio
 import os
+from dotenv import load_dotenv
 # Import your custom logic from the other file
 from ai_models import GeminiModel, AiInstructor, Voice, FactValidator
 from utils import merge_fact_video
@@ -16,7 +17,7 @@ async def main():
     sys_msg = "You are a Viral Content Specialist. Style: Mystery/Thriller."
     
     # Initialize components
-    llm = GeminiModel(api_key=API_KEY, system5_instruction=sys_msg)
+    llm = GeminiModel(api_key=API_KEY, system_instruction=sys_msg)
     instructor = AiInstructor(llm)
     voice_engine = Voice()
 
