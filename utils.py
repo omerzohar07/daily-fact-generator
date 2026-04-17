@@ -5,9 +5,11 @@ from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 from moviepy.video.fx.Crop import Crop
 import requests
 import os
+import json
+import time
 from retry import retry
 
-TELEGRAM_KEY = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_KEY = os.getenv("TELEGRAM_API_KEY")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 IS_LOCAL_DEBUGGING = os.getenv("LOCAL_DEBUGGING") == "true"
 
@@ -17,11 +19,19 @@ def send_to_telegram(video_path, caption="New Mystery Video!"):
     chat_id = TELEGRAM_CHAT_ID
     url = f"https://api.telegram.org/bot{token}/sendVideo"
     
+    keyboard = {
+        "inline_keyboard": [[
+            {"text": "✅ Approve & Upload", "callback_data": f"approve:{video_path}"},
+            {"text": "❌ Delete", "callback_data": "delete_video"}
+        ]]
+    }
+
     with open(video_path, 'rb') as video_file:
         payload = {
             'chat_id': chat_id,
             'caption': caption,
-            'supports_streaming': True # Allows users to watch while downloading
+            'supports_streaming': True, # Allows users to watch while downloading
+            'reply_markup': json.dumps(keyboard)
         }
         files = {'video': video_file}
         
@@ -33,6 +43,25 @@ def send_to_telegram(video_path, caption="New Mystery Video!"):
         else:
             print(f"Failed to send: {response.text}")
 
+
+def wait_for_approval():
+    print("Waiting for Telegram approval...")
+    last_update_id = -1
+    
+    while True:
+        # Check Telegram for new button clicks (callback_queries)
+        url = f"https://api.telegram.org/bot{TELEGRAM_KEY}/getUpdates"
+        params = {"offset": last_update_id + 1, "timeout": 30}
+        updates = requests.get(url, params=params).json()
+
+        for update in updates.get("result", []):
+            last_update_id = update["update_id"]
+            
+            if "callback_query" in update:
+                data = update["callback_query"]["data"]
+                return data.startswith("approve")
+        
+        time.sleep(2) 
 
 def add_subtitles(video_clip, audio_path):
     print("--- Transcribing Audio for Subtitles ---")
@@ -50,8 +79,6 @@ def add_subtitles(video_clip, audio_path):
             start = word['start']
             end = word['end']
             duration = end - start
-            
-            safe_width = int(video_width * 0.9)
 
             txt_clip = TextClip(
                 text=text,
@@ -61,7 +88,6 @@ def add_subtitles(video_clip, audio_path):
                 stroke_color='black',
                 stroke_width=3,
                 method='label',         
-                size=(safe_width, None),  # This forces a horizontal boundary
                 text_align='center'            # Centers the text within that boundary
             ).with_start(start).with_duration(duration).with_position(('center', video_height / 2))
             

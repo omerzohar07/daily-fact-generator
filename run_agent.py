@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 # Import your custom logic from the other file
 from ai_models import GeminiModel, AiInstructor, Voice
-from utils import merge_fact_video, send_to_telegram
+from utils import merge_fact_video, send_to_telegram, wait_for_approval
 
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -39,11 +39,11 @@ async def main():
 
     print(f"Fact: {validated_fact}")
     
-    # 2. Generate Audio
+    # 2. Generate Audio.
     print("--- Generating Voiceover ---")
     audio_file = await Voice().generate_audio(validated_fact)
 
-    # 3. Merge Video (Ensure the MP4 file exists in your directory!)
+    # 3. Merge Video.
     merge_fact_video(video_input_path="minecraft-parkour-gameplay-vertical.mp4", 
                     audio_input_path=audio_file,
                     output_path=NEW_REEL_FILE_NAME
@@ -51,6 +51,9 @@ async def main():
                      
 
     send_to_telegram(video_path=NEW_REEL_FILE_NAME)
+    
+    is_approved = wait_for_approval()
+    print(f"Approval Status: {is_approved}")
 
 if __name__ == "__main__":
     asyncio.run(main())
