@@ -8,11 +8,14 @@ RUN apt-get update && apt-get install -y \
     libmagic1 \
     fonts-freefont-ttf \
     fonts-dejavu-core \
+    fonts-montserrat \
     && rm -rf /var/lib/apt/lists/*
+
+RUN fc-cache -f -v
 
 # 2. Fix ImageMagick security policy (This MUST happen after installing imagemagick)
 # This allows MoviePy to use the 'label' and 'caption' methods for subtitles
-RUN sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-*/policy.xml
+RUN sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@*"/g' /etc/ImageMagick-*/policy.xml
 
 # 3. Set the working directory
 WORKDIR /app

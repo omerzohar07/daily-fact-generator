@@ -32,10 +32,23 @@ async def main():
         llm = GeminiModel(api_key=API_KEY, system_instruction=sys_msg)
         instructor = AiInstructor(llm)
 
-        # 1. Generate & Validate
-        print("--- Generating Fact ---")
-        raw_fact = instructor.get_fact()
-        validated_fact = instructor.validate(raw_fact)
+        approved = False
+
+        while not approved:
+            print("--- Generating Fact ---")
+            raw_fact = instructor.get_fact()
+            validated_fact = instructor.validate(raw_fact)
+            
+            send_to_telegram(daily_fact=validated_fact)
+    
+            approved = wait_for_approval()
+            
+            if not approved:
+                print("Fact rejected/deleted. Generating a new one...")
+
+            else:
+                print("Fact approved! Proceeding to video generation...")
+                break
 
     print(f"Fact: {validated_fact}")
     
@@ -53,7 +66,12 @@ async def main():
     send_to_telegram(video_path=NEW_REEL_FILE_NAME)
     
     is_approved = wait_for_approval()
-    print(f"Approval Status: {is_approved}")
+    if is_approved:
+        print("✅ Approved! Uploading to YouTube...")
+        # from youtube_uploader import upload_video
+        # upload_video(NEW_REEL_FILE_NAME, title="Daily Shocking Fact!")
+        
+
 
 if __name__ == "__main__":
     asyncio.run(main())

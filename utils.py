@@ -12,41 +12,54 @@ from retry import retry
 TELEGRAM_KEY = os.getenv("TELEGRAM_API_KEY")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 IS_LOCAL_DEBUGGING = os.getenv("LOCAL_DEBUGGING") == "true"
+last_update_id = -1
 
 @retry(tries=3, delay=30, backoff=1)
-def send_to_telegram(video_path, caption="New Mystery Video!"):
+def send_to_telegram(daily_fact=None, video_path=None, caption="New Mystery Video!"):
     token = TELEGRAM_KEY
     chat_id = TELEGRAM_CHAT_ID
     url = f"https://api.telegram.org/bot{token}/sendVideo"
     
     keyboard = {
         "inline_keyboard": [[
-            {"text": "✅ Approve & Upload", "callback_data": f"approve:{video_path}"},
-            {"text": "❌ Delete", "callback_data": "delete_video"}
+            {"text": "✅ Approve", "callback_data": "true"},
+            {"text": "❌ Delete", "callback_data": "false"}
         ]]
     }
-
-    with open(video_path, 'rb') as video_file:
+    reply_markup = json.dumps(keyboard)
+    
+    if daily_fact and not video_path:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
             'chat_id': chat_id,
-            'caption': caption,
-            'supports_streaming': True, # Allows users to watch while downloading
-            'reply_markup': json.dumps(keyboard)
+            'text': f"📜 *FACT:*\n\n{daily_fact}",
+            'parse_mode': 'Markdown',
+            'reply_markup': reply_markup
         }
-        files = {'video': video_file}
+        response = requests.post(url, data=payload)
+    
+    elif video_path:
+        url = f"https://api.telegram.org/bot{token}/sendVideo"
+        with open(video_path, 'rb') as video_file:
+            payload = {
+                'chat_id': chat_id,
+                'caption': f"🎬 *VIDEO*\n\n{caption}",
+                'supports_streaming': True,
+                'reply_markup': reply_markup
+            }
+            
+            files = {'video': video_file}
+            response = requests.post(url, data=payload, files=files)   
         
-        print("--- Sending Video to Telegram ---")
-        response = requests.post(url, data=payload, files=files)
-        
-        if response.status_code == 200:
-            print("Successfully sent to Telegram!")
-        else:
-            print(f"Failed to send: {response.text}")
+    if response.status_code == 200:
+        print("Successfully sent to Telegram!")
+    else:
+        print(f"Failed to send: {response.text}")
 
 
 def wait_for_approval():
     print("Waiting for Telegram approval...")
-    last_update_id = -1
+    global last_update_id
     
     while True:
         # Check Telegram for new button clicks (callback_queries)
@@ -58,8 +71,7 @@ def wait_for_approval():
             last_update_id = update["update_id"]
             
             if "callback_query" in update:
-                data = update["callback_query"]["data"]
-                return data.startswith("approve")
+                return update["callback_query"]["data"] == 'true'
         
         time.sleep(2) 
 
@@ -82,14 +94,15 @@ def add_subtitles(video_clip, audio_path):
 
             txt_clip = TextClip(
                 text=text,
-                font="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 
-                font_size=100,
+                font="/usr/share/fonts/truetype/montserrat/Montserrat-Bold.ttf", 
+                font_size=80,
                 color='yellow',
                 stroke_color='black',
-                stroke_width=3,
-                method='label',         
-                text_align='center'            # Centers the text within that boundary
-            ).with_start(start).with_duration(duration).with_position(('center', video_height / 2))
+                stroke_width=2,
+                method='caption',    
+                size=(int(video_width * 0.75), 200),
+                text_align='center'
+            ).with_start(start).with_duration(duration).with_position(('center', video_height*0.7))
             
             subtitle_clips.append(txt_clip)
 
