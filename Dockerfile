@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
     fonts-montserrat \
     && rm -rf /var/lib/apt/lists/*
 
-RUN fc-cache -f -v
 
 # 2. Fix ImageMagick security policy (This MUST happen after installing imagemagick)
 # This allows MoviePy to use the 'label' and 'caption' methods for subtitles
