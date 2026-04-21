@@ -1,6 +1,6 @@
 import random
 import whisper
-from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
+from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, CompositeAudioClip
 # Import vfx for cropping
 from moviepy.video.fx.Crop import Crop
 import requests
@@ -95,37 +95,47 @@ def add_subtitles(video_clip, audio_path):
             txt_clip = TextClip(
                 text=text,
                 font="/usr/share/fonts/truetype/montserrat/Montserrat-Bold.ttf", 
-                font_size=80,
+                font_size=100,
                 color='yellow',
                 stroke_color='black',
                 stroke_width=2,
                 method='caption',    
                 size=(int(video_width * 0.75), 200),
                 text_align='center'
-            ).with_start(start).with_duration(duration).with_position(('center', video_height*0.7))
+            ).with_start(start).with_duration(duration).with_position(('center', 'center'))
             
             subtitle_clips.append(txt_clip)
 
     return CompositeVideoClip([video_clip] + subtitle_clips)
 
-def merge_fact_video(video_input_path, audio_input_path, output_path):
+def merge_fact_video(video_input_path, audio_input_path, music_input_path, output_path):
     try:
         video = VideoFileClip(video_input_path)
-        audio = AudioFileClip(audio_input_path)
+        voiceover = AudioFileClip(audio_input_path)
+        
+        # The clip length will be the audio length OR 62s, whichever is longer.
+        target_duration = max(62, voiceover.duration)
 
-        # 1. CALCULATE VERTICAL GEOMETRY
-        # Target aspect ratio is 9:16. We scale height to 1920 and crop width to 1080.
-        print("--- Reformatting to Vertical (9:16) ---")
+        # If in local mode, we force a 5-second limit
+        if IS_LOCAL_DEBUGGING:
+            print("--- Local Mode: Capping video to 5 seconds ---")
+            target_duration = 5
+
+        # Load and prepare background music
+        bg_music = (AudioFileClip(music_input_path)
+                    .with_volume_scaled(0.1)
+                    .subclipped(0, target_duration)
+        )
+
+        combined_audio = CompositeAudioClip([
+            voiceover, bg_music
+        ])
         
-        # Scale video so the height is 1920
-        # 1. CALCULATE VERTICAL GEOMETRY
         print("--- Reformatting to Vertical (9:16) ---")
-        
         # Scale video so the height is 1920 (this makes it a very wide 16:9)
         video_scaled = video.resized(height=1920)
         curr_w, curr_h = video_scaled.size
         
-        # CORRECT CROP: Don't pass the clip into Crop(), pass it into .apply()
         video_vertical = Crop(
             width=1080, 
             height=1920, 
@@ -133,23 +143,18 @@ def merge_fact_video(video_input_path, audio_input_path, output_path):
             y_center=curr_h / 2
         ).apply(video_scaled)
         
-        audio_duration = audio.duration
+        
         video_duration = video_vertical.duration
 
-        # If in local mode, we force a 5-second limit
-        if IS_LOCAL_DEBUGGING:
-            print("--- Local Mode: Capping video to 5 seconds ---")
-            audio_duration = min(5, audio_duration)
-
-        if video_duration < audio_duration:
+        if video_duration < target_duration:
             print("Error: The gameplay video is shorter than the audio!")
             return
 
-        max_start_time = video_duration - audio_duration - 2
+        max_start_time = video_duration - target_duration - 2
         start_time = random.uniform(0, max_start_time)
 
-        print(f"--- Slicing Video: {audio_duration:.2f}s starting at {start_time:.2f}s ---")
-        base_clip = video_vertical.subclipped(start_time, start_time + audio_duration).with_audio(audio)
+        print(f"--- Slicing Video: {target_duration:.2f}s starting at {start_time:.2f}s ---")
+        base_clip = video_vertical.subclipped(start_time, start_time + target_duration).with_audio(combined_audio)
 
         # 2. ADD SUBTITLES TO THE VERTICAL CLIP
         final_video = add_subtitles(base_clip, audio_input_path)
@@ -164,7 +169,9 @@ def merge_fact_video(video_input_path, audio_input_path, output_path):
         )
 
         video.close()
-        audio.close()
+        voiceover.close()
+        bg_music.close()
+        combined_audio.close()
         print(f"--- Done! Vertical project saved at: {output_path} ---")
 
     except Exception as e:

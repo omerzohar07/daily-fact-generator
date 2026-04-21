@@ -59,6 +59,7 @@ async def main():
     # 3. Merge Video.
     merge_fact_video(video_input_path="minecraft-parkour-gameplay-vertical.mp4", 
                     audio_input_path=audio_file,
+                    music_input_path="bm.mp3",
                     output_path=NEW_REEL_FILE_NAME
                     )
                      
