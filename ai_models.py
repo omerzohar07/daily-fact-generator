@@ -46,22 +46,20 @@ class FactGenerator(AiInstructor):
     def fetch_daily_fact(self):
         today = datetime.datetime.now().strftime("%B %d")
         prompt = (
-            f"Today is {today}. Find a shocking or bizarre historical event "
+            f"Today is {today}. Find a shocking, bizarre, or 'lost' historical event "
             f"that happened on this exact date.\n\n"
-            f"Structure the response for a 60-second voiceover:\n"
-            f"1. THE SHOCK: Start immediately with the most jarring, 'no way that happened' "
-            f"fact to grab attention in the first 3 seconds.\n"
-            f"2. THE MEAT: Provide 4-5 escalating, eerie details that explain the context "
-            f"while building tension.\n"
-            f"3. THE TWIST: A final 'sounds fake but is true' detail that leaves the "
-            f"listener unsettled.\n"
-            f"4. LENGTH: 150-180 words.\n\n"
+            f"WRITING STYLE: Use a 'Pattern Interrupt' hook. Do not summarize history; "
+            f"challenge the listener's reality immediately.\n"
+            f"Example: 'They want you to believe Napoleon died of natural causes, but the truth is buried in a ghost town.'\n\n"
+            f"STRUCTURE:\n"
+            f"1. THE HOOK: Start with a jarring contradiction or a morbid impossibility. No 'On this day' intros.\n"
+            f"2. THE MEAT: 4-5 fast-paced, eerie details. Use sensory words (blood, shadows, silence, steel).\n"
+            f"3. THE TWIST: A final detail that leaves a 'chilling void' or a lingering ghost story.\n"
+            f"4. PACING: Use short, punchy sentences. 140-160 words total.\n\n"
             f"STRICT RULES:\n"
             f"- Output ONLY the spoken words.\n"
-            f"- NO stage directions like '(Camera zooms)' or '(Images flash)'.\n"
-            f"- NO scene descriptions or on-screen text labels.\n"
-            f"- NO bolding or special formatting.\n"
             f"- Tone: Dark Mystery / Psychological Thriller.\n"
+            f"- Avoid 'teacher' language like 'In conclusion' or 'It is important to note'.\n"
             f"- Language: English."
         )
         return self.model.generate_response(prompt)
@@ -70,15 +68,16 @@ class FactValidator(AiInstructor):
     """Specialized in professional fact-checking."""
     def verify(self, fact_text: str):
         prompt = (
-            f"You are a professional Investigative Journalist and Script Editor. "
-            f"Fact-check and clean the following text:\n\n"
+            f"You are a Script Doctor for a Viral Mystery channel. "
+            f"Fact-check and 'Darken' the following text:\n\n"
             f"--- TEXT START ---\n{fact_text}\n--- TEXT END ---\n\n"
             f"TASKS:\n"
-            f"1. Verify all facts/dates. If it's a myth, replace it with the truth.\n"
-            f"2. REMOVE all stage directions, camera cues, and descriptions in parentheses ( ).\n"
-            f"3. REMOVE all labels like 'VOICEOVER:' or 'HOOK:'.\n"
-            f"4. Ensure the text is one continuous, natural narration for a deep-voiced speaker.\n"
-            f"5. OUTPUT ONLY THE FINAL SPOKEN SCRIPT. Nothing else."
+            f"1. FACT-CHECK: Verify all dates/names. If a detail is a common myth, replace it with the gritty, verifiable truth.\n"
+            f"2. REMOVE THE 'TEACHER': Delete phrases like 'the truth is more chilling' or 'that claim is a myth.' "
+            f"Instead, use aggressive transitions like 'The records are a lie' or 'The reality is much darker.'\n"
+            f"3. CLEANUP: Strip all labels (HOOK:, VO:), stage directions, and parentheses.\n"
+            f"4. FLOW: Ensure the script is one seamless block of text for a deep-voiced, rhythmic narrator.\n"
+            f"5. OUTPUT ONLY THE FINAL SPOKEN SCRIPT. No intro/outro commentary."
         )
         return self.model.generate_response(prompt)
     
