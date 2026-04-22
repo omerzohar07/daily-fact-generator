@@ -3,15 +3,19 @@ import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+import logging
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+from config import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 def get_youtube_client():
     scopes = ["https://www.googleapis.com/auth/youtube.upload"]
     creds = None
 
     if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+        with open('token.pickel', 'rb') as token:
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
@@ -23,7 +27,7 @@ def get_youtube_client():
             prompt='consent'
         )
         
-        print(f"\n🚀 Visit this URL to authorize:\n{auth_url}\n")
+        logger.debug(f"\n🚀 Visit this URL to authorize:\n{auth_url}\n")
         
         code = input("Enter the code from the browser: ").strip()
         flow.fetch_token(code=code)
@@ -32,6 +36,7 @@ def get_youtube_client():
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
+    logger.info("YouTube client authenticated successfully.")
     return build("youtube", "v3", credentials=creds)
 
 def upload_video(file_path, title):
@@ -41,7 +46,7 @@ def upload_video(file_path, title):
         body={
             "snippet": {
                 "title": title, 
-                "description": "Uploaded via Python", 
+                "description": "The history they didn't want you to know. One fact a day from The Professor.",
                 "tags": ["#Shorts", "#History", "#Facts", "#DidYouKnow", "#Educational", "#HistoryBuff"],
                 "categoryId": "27"
             },
@@ -52,6 +57,6 @@ def upload_video(file_path, title):
         },
         media_body=MediaFileUpload(file_path, chunksize=-1, resumable=True)
     )
-    print("Uploading...")
+    logger.info("Uploading...")
     response = request.execute()
-    print(f"Success! Video ID: {response['id']}")
+    logger.info(f"Success! Video ID: {response['id']}")

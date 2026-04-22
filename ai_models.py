@@ -68,16 +68,22 @@ class FactValidator(AiInstructor):
     """Specialized in professional fact-checking."""
     def verify(self, fact_text: str):
         prompt = (
-            f"You are a Script Doctor for a Viral Mystery channel. "
-            f"Fact-check and 'Darken' the following text:\n\n"
+            f"You are a Script Doctor and Fact-Checker for a Viral Mystery channel.\n\n"
             f"--- TEXT START ---\n{fact_text}\n--- TEXT END ---\n\n"
             f"TASKS:\n"
-            f"1. FACT-CHECK: Verify all dates/names. If a detail is a common myth, replace it with the gritty, verifiable truth.\n"
-            f"2. REMOVE THE 'TEACHER': Delete phrases like 'the truth is more chilling' or 'that claim is a myth.' "
-            f"Instead, use aggressive transitions like 'The records are a lie' or 'The reality is much darker.'\n"
-            f"3. CLEANUP: Strip all labels (HOOK:, VO:), stage directions, and parentheses.\n"
-            f"4. FLOW: Ensure the script is one seamless block of text for a deep-voiced, rhythmic narrator.\n"
-            f"5. OUTPUT ONLY THE FINAL SPOKEN SCRIPT. No intro/outro commentary."
+            f"1. FACT-CHECK: Verify dates and names. Replace myths with gritty, verifiable truth.\n"
+            f"2. DARKEN: Ensure the tone is aggressive and mysterious. Replace 'teacher' phrases with high-stakes transitions.\n"
+            f"3. CLEANUP: Strip all stage directions, labels, and parentheses.\n"
+            f"4. TITLE GENERATION: Create a high-CTR, 3-5 word title that creates an 'open loop' for the viewer.\n\n"
+            f"OUTPUT FORMAT: Return ONLY a valid JSON object with these keys:\n"
+            f"{{ \n"
+            f"  \"title\": \"The Clickbait Title\",\n"
+            f"  \"script\": \"The final spoken narration\"\n"
+            f"}}\n\n"
+            f"STRICT RULES:\n"
+            f"- Output ONLY the JSON.\n"
+            f"- No commentary or intro text.\n"
+            f"- Script length: 140-160 words."
         )
         return self.model.generate_response(prompt)
     
@@ -97,7 +103,6 @@ class Voice:
 class WhisperModel(BaseModel):
     """Implementation of OpenAI's Whisper for transcription."""
     def __init__(self, model_size: str = "base"):
-        print(f"--- Loading Whisper {model_size} Model (Once) ---")
         # Load the model into memory once during initialization
         self.model = whisper.load_model(model_size)
 

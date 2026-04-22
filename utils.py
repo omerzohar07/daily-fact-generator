@@ -8,6 +8,12 @@ import os
 import json
 import time
 from retry import retry
+import logging
+
+from config import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 TELEGRAM_KEY = os.getenv("TELEGRAM_API_KEY")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -52,13 +58,26 @@ def send_to_telegram(daily_fact=None, video_path=None, caption="New Mystery Vide
             response = requests.post(url, data=payload, files=files)   
         
     if response.status_code == 200:
-        print("Successfully sent to Telegram!")
+        logger.info("Successfully sent to Telegram!")
+    
+    elif response.status_code == 413:
+        logger.error("Video file is too large for Telegram Bot API.")
+        warning_url = f"https://api.telegram.org/bot{token}/sendMessage"
+        warning_payload = {
+            'chat_id': chat_id,
+            'text': "⚠️ **Video too large!** The file exceeds 50MB. Should I attempt an alternative upload or skip?",
+            'parse_mode': 'Markdown',
+            'reply_markup': reply_markup
+        }
+        requests.post(warning_url, data=warning_payload)
+    
     else:
-        print(f"Failed to send: {response.text}")
+        # General error fallback
+        logger.error(f"Failed to send: {response.status_code} - {response.text}")
 
 
 def wait_for_approval():
-    print("Waiting for Telegram approval...")
+    logger.info("Waiting for Telegram approval...")
     global last_update_id
     
     while True:
@@ -76,7 +95,7 @@ def wait_for_approval():
         time.sleep(2) 
 
 def add_subtitles(video_clip, audio_path):
-    print("--- Transcribing Audio for Subtitles ---")
+    logger.info("--- Transcribing Audio for Subtitles ---")
     model = whisper.load_model("base")
     result = model.transcribe(audio_path, word_timestamps=True)
     
@@ -118,7 +137,7 @@ def merge_fact_video(video_input_path, audio_input_path, music_input_path, outpu
 
         # If in local mode, we force a 5-second limit
         if IS_LOCAL_DEBUGGING:
-            print("--- Local Mode: Capping video to 5 seconds ---")
+            logger.info("--- Local Mode: Capping video to 5 seconds ---")
             target_duration = 5
 
         # Load and prepare background music
@@ -131,7 +150,7 @@ def merge_fact_video(video_input_path, audio_input_path, music_input_path, outpu
             voiceover, bg_music
         ])
         
-        print("--- Reformatting to Vertical (9:16) ---")
+        logger.info("--- Reformatting to Vertical (9:16) ---")
         # Scale video so the height is 1920 (this makes it a very wide 16:9)
         video_scaled = video.resized(height=1920)
         curr_w, curr_h = video_scaled.size
@@ -147,19 +166,19 @@ def merge_fact_video(video_input_path, audio_input_path, music_input_path, outpu
         video_duration = video_vertical.duration
 
         if video_duration < target_duration:
-            print("Error: The gameplay video is shorter than the audio!")
+            logger.error("Error: The gameplay video is shorter than the audio!")
             return
 
         max_start_time = video_duration - target_duration - 2
         start_time = random.uniform(0, max_start_time)
 
-        print(f"--- Slicing Video: {target_duration:.2f}s starting at {start_time:.2f}s ---")
+        logger.info(f"--- Slicing Video: {target_duration:.2f}s starting at {start_time:.2f}s ---")
         base_clip = video_vertical.subclipped(start_time, start_time + target_duration).with_audio(combined_audio)
 
         # 2. ADD SUBTITLES TO THE VERTICAL CLIP
         final_video = add_subtitles(base_clip, audio_input_path)
 
-        print("--- Rendering Final Vertical Video ---")
+        logger.info("--- Rendering Final Vertical Video ---")
         final_video.write_videofile(
             output_path,
             codec="libx264",
@@ -172,7 +191,7 @@ def merge_fact_video(video_input_path, audio_input_path, music_input_path, outpu
         voiceover.close()
         bg_music.close()
         combined_audio.close()
-        print(f"--- Done! Vertical project saved at: {output_path} ---")
+        logger.info(f"--- Done! Vertical project saved at: {output_path} ---")
 
     except Exception as e:
-        print(f"An error occurred during video processing: {e}")
+        logger.error(f"An error occurred during video processing: {e}")
