@@ -4,3 +4,4 @@ fact.txt
 *.mp3
 *.mp4
 client_secret*
+*.pickle

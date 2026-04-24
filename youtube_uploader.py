@@ -29,9 +29,7 @@ def get_youtube_client():
         
         logger.debug(f"\n🚀 Visit this URL to authorize:\n{auth_url}\n")
         
-        code = input("Enter the code from the browser: ").strip()
-        flow.fetch_token(code=code)
-        creds = flow.credentials
+        creds = flow.run_local_server(port=0)
 
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
@@ -52,7 +50,7 @@ def upload_video(file_path, title):
             },
             "status": {
                 "privacyStatus": "private",
-                "selfDeclaredMadeForKids": False
+                "selfDeclaredMadeForKids": False,   
             }
         },
         media_body=MediaFileUpload(file_path, chunksize=-1, resumable=True)
