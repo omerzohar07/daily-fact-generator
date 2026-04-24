@@ -15,7 +15,7 @@ def get_youtube_client():
     creds = None
 
     if os.path.exists('token.pickle'):
-        with open('token.pickel', 'rb') as token:
+        with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
@@ -40,7 +40,7 @@ def get_youtube_client():
 def upload_video(file_path, title):
     youtube = get_youtube_client()
     request = youtube.videos().insert(
-        part="snippet,status",
+        part="snippet, status",
         body={
             "snippet": {
                 "title": title, 
