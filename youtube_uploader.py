@@ -46,7 +46,7 @@ def upload_video(file_path, title):
                 "title": title, 
                 "description": "The history they didn't want you to know. One fact a day from The Professor.",
                 "tags": ["#Shorts", "#History", "#Facts", "#DidYouKnow", "#Educational", "#HistoryBuff"],
-                "categoryId": "27"
+                "categoryId": "24"
             },
             "status": {
                 "privacyStatus": "private",

@@ -46,21 +46,23 @@ class FactGenerator(AiInstructor):
     def fetch_daily_fact(self):
         today = datetime.datetime.now().strftime("%B %d")
         prompt = (
-            f"Today is {today}. Find a shocking, bizarre, or 'lost' historical event "
-            f"that happened on this exact date.\n\n"
-            f"WRITING STYLE: Use a 'Pattern Interrupt' hook. Do not summarize history; "
-            f"challenge the listener's reality immediately.\n"
-            f"Example: 'They want you to believe Napoleon died of natural causes, but the truth is buried in a ghost town.'\n\n"
+            f"Today is {today}. Find one historically verified, yet 'hidden' or suppressed event "
+            f"that occurred on this calendar date.\n\n"
+            f"OBJECTIVE: Write a 50-60 second YouTube Short script (approx. 140 words).\n\n"
             f"STRUCTURE:\n"
-            f"1. THE HOOK: Start with a jarring contradiction or a morbid impossibility. No 'On this day' intros.\n"
-            f"2. THE MEAT: 4-5 fast-paced, eerie details. Use sensory words (blood, shadows, silence, steel).\n"
-            f"3. THE TWIST: A final detail that leaves a 'chilling void' or a lingering ghost story.\n"
-            f"4. PACING: Use short, punchy sentences. 140-160 words total.\n\n"
+            f"1. THE SHATTERED ANCHOR (0-5s): Start with a known historical fact, then immediately break it. "
+            f"Format: '[Well-known person/place] didn't [well-known event]. They [shocking truth].'\n"
+            f"2. THE INVESTIGATION (5-20s): Provide the 'Who, Where, and When' clearly. Anchor the viewer's brain. "
+            f"Detail: Give 3 fast, concrete pieces of evidence (names, specific numbers, or leaked documents).\n"
+            f"3. THE 'WHY IT MATTERS' (20-45s): Connect this event to why the world looks different today. Why was this 'lost'?\n"
+            f"4. THE PROFESSOR'S EXIT (45-60s): End with a question that makes the viewer doubt what they learned in school.\n\n"
             f"STRICT RULES:\n"
-            f"- Output ONLY the spoken words.\n"
-            f"- Tone: Dark Mystery / Psychological Thriller.\n"
-            f"- Avoid 'teacher' language like 'In conclusion' or 'It is important to note'.\n"
-            f"- Language: English."
+            f"- TONE: Authoritative, fast-paced, and slightly skeptical.\n"
+            f"- STYLE: Use 'The Professor' persona—not a storyteller, but a whistleblower of history.\n"
+            f"- CLARITY: No abstract poetry. If there is an object, name the owner.\n"
+            f"- NO INTROS: Start with the first word of the hook.\n"
+            f"- OUTPUT: Spoken words ONLY.\n"
+            f"- LANGUAGE: English."
         )
         return self.model.generate_response(prompt)
 
