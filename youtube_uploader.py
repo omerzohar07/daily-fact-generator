@@ -3,6 +3,7 @@ import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.auth.transport.requests import Request
 import logging
 
 from config import setup_logging
@@ -19,17 +20,13 @@ def get_youtube_client():
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
-        # Load the flow from the client secrets
-        flow = InstalledAppFlow.from_client_secrets_file('client_secrets.json', scopes)
-        auth_url, _ = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
-        )
-        
-        logger.debug(f"\n🚀 Visit this URL to authorize:\n{auth_url}\n")
-        
-        creds = flow.run_local_server(port=0)
+        if creds and creds.expired and creds.refresh_token:
+            logger.info("Refreshing expired access token...")
+            creds.refresh(Request())
+        else:
+            logger.error("No valid token.pickle found. You must generate this locally first.")
+            flow = InstalledAppFlow.from_client_secrets_file('client_secrets.json', scopes)
+            creds = flow.run_local_server(port=0)
 
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)

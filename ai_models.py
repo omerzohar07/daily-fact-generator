@@ -46,22 +46,28 @@ class FactGenerator(AiInstructor):
     def fetch_daily_fact(self):
         today = datetime.datetime.now().strftime("%B %d")
         prompt = (
-            f"Today is {today}. Find one historically verified, yet 'hidden' or suppressed event "
-            f"that occurred on this calendar date.\n\n"
-            f"OBJECTIVE: Write a 50-60 second YouTube Short script (approx. 140 words).\n\n"
+            f"Today is {today}. Find one historically verified, surprising, and high-impact fact "
+            f"involving a world-famous figure (e.g., a President, A-list icon, or Tech Giant) "
+            f"that occurred or was revealed on this calendar date.\n\n"
+            
+            f"OBJECTIVE: Write a 50-60 second high-retention script (approx. 140 words).\n\n"
+            
             f"STRUCTURE:\n"
-            f"1. THE SHATTERED ANCHOR (0-5s): Start with a known historical fact, then immediately break it. "
-            f"Format: '[Well-known person/place] didn't [well-known event]. They [shocking truth].'\n"
-            f"2. THE INVESTIGATION (5-20s): Provide the 'Who, Where, and When' clearly. Anchor the viewer's brain. "
-            f"Detail: Give 3 fast, concrete pieces of evidence (names, specific numbers, or leaked documents).\n"
-            f"3. THE 'WHY IT MATTERS' (20-45s): Connect this event to why the world looks different today. Why was this 'lost'?\n"
-            f"4. THE PROFESSOR'S EXIT (45-60s): End with a question that makes the viewer doubt what they learned in school.\n\n"
+            f"1. THE HOOK (0-5s): Start with a surprising contrast to their public image. "
+            f"Format: '[Famous Person] is defined by [Known Achievement], but their real turning point happened today. It wasn't [Common Myth]; it was [Surprising Reality].'\n"
+            f"2. THE ARCHIVE (5-20s): Provide the 'Hard Data.' Use concrete details: specific addresses, exact numbers, or documented quotes. "
+            f"Give 3 rapid-fire facts that prove this event changed the course of their life.\n"
+            f"3. THE DOMINO EFFECT (20-45s): Explain the 'Why it matters.' How did this single moment create a ripple effect "
+            f"that influences the world the viewer lives in right now? Connect the past to a modern-day habit or product.\n"
+            f"4. THE FINAL THOUGHT (45-60s): Deliver a closing line that reframes the icon as a human being rather than a statue. "
+            f"End with a question that makes the viewer wonder about their own untapped potential.\n\n"
+            
             f"STRICT RULES:\n"
-            f"- TONE: Authoritative, fast-paced, and slightly skeptical.\n"
-            f"- STYLE: Use 'The Professor' persona—not a storyteller, but a whistleblower of history.\n"
-            f"- CLARITY: No abstract poetry. If there is an object, name the owner.\n"
-            f"- NO INTROS: Start with the first word of the hook.\n"
-            f"- OUTPUT: Spoken words ONLY.\n"
+            f"- PERSONA: 'The Archivist'—intelligent, sharp, and slightly witty. No paranoia, only fascinating insight.\n"
+            f"- VERACITY: 100% real history. No legends or 'maybe' stories.\n"
+            f"- HOOK FOCUS: The first 3 words must be 'scroll-stopping.' Use high-momentum language (e.g., 'The contract signed,' 'The secret audition.').\n"
+            f"- NO INTROS: Start immediately. No 'Hey everyone' or 'Welcome back.'\n"
+            f"- OUTPUT: Spoken words ONLY. No stage directions or brackets.\n"
             f"- LANGUAGE: English."
         )
         return self.model.generate_response(prompt)
@@ -70,21 +76,24 @@ class FactValidator(AiInstructor):
     """Specialized in professional fact-checking."""
     def verify(self, fact_text: str):
         prompt = (
-            f"You are a Script Doctor and Fact-Checker for a Viral Mystery channel.\n\n"
+            f"You are a Script Editor and Fact-Checker for a premium Educational Entertainment channel.\n\n"
             f"--- TEXT START ---\n{fact_text}\n--- TEXT END ---\n\n"
+            
             f"TASKS:\n"
-            f"1. FACT-CHECK: Verify dates and names. Replace myths with gritty, verifiable truth.\n"
-            f"2. DARKEN: Ensure the tone is aggressive and mysterious. Replace 'teacher' phrases with high-stakes transitions.\n"
-            f"3. CLEANUP: Strip all stage directions, labels, and parentheses.\n"
-            f"4. TITLE GENERATION: Create a high-CTR, 3-5 word title that creates an 'open loop' for the viewer.\n\n"
+            f"1. FACT-CHECK: Ensure names, dates, and locations are 100% accurate. Remove any 'conspiracy' or 'cover-up' language.\n"
+            f"2. ENERGIZE: Make the tone punchy and sophisticated. Replace boring transitions with high-momentum 'power phrases.'\n"
+            f"3. CLEANUP: Ensure there are zero labels, stage directions, or parenthetical notes.\n"
+            f"4. TITLE GENERATION: Create a high-CTR, 3-5 word title that uses the 'Gap Theory' (creates a curiosity gap).\n\n"
+            
             f"OUTPUT FORMAT: Return ONLY a valid JSON object with these keys:\n"
-            f"{{ \n"
-            f"  \"title\": \"The Clickbait Title\",\n"
+            f"{{\n"
+            f"  \"title\": \"The Famous Figure's Secret\",\n"
             f"  \"script\": \"The final spoken narration\"\n"
             f"}}\n\n"
+            
             f"STRICT RULES:\n"
             f"- Output ONLY the JSON.\n"
-            f"- No commentary or intro text.\n"
+            f"- No commentary.\n"
             f"- Script length: 140-160 words."
         )
         return self.model.generate_response(prompt)
