@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import re
 import logging
 
-from ai_models import GeminiModel, AiInstructor, Voice
+from ai_models import ChatGPTModel, GeminiModel, AiInstructor, Voice
 from utils import merge_fact_video, send_to_telegram, wait_for_approval
 from config import setup_logging
 
@@ -13,14 +13,15 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 IS_LOCAL_DEBUGGING = os.getenv("LOCAL_DEBUGGING") == "true"
 NEW_REEL_FILE_NAME = "final_vertical_short.mp4"
 
 # --- Main Execution ---
 async def main():
-    if not API_KEY:
-        logger.error("No API Key found. Exiting...")
+    if not GEMINI_API_KEY or not OPENAI_API_KEY:
+        logger.error("One or more API keys not found. Exiting...")
         return
     
     if IS_LOCAL_DEBUGGING:
@@ -33,9 +34,13 @@ async def main():
             return
     
     else:
-        sys_msg = "You are a Viral Content Specialist. Style: Mystery/Thriller."
-        llm = GeminiModel(api_key=API_KEY, system_instruction=sys_msg)
-        instructor = AiInstructor(llm)
+        gemini_llm = GeminiModel(api_key=GEMINI_API_KEY, system_instruction="You are a Viral Content Specialist. Style: Mystery/Thriller.")
+        chatgpt_llm = ChatGPTModel(api_key=OPENAI_API_KEY, system_instruction="You are a strict fact-checker.")
+
+        instructor = AiInstructor(
+            generator_model=gemini_llm, 
+            validator_model=chatgpt_llm,
+        )
 
         approved = False
         while not approved:
@@ -72,8 +77,8 @@ async def main():
             except Exception as e:
                 logger.error(f"Error during generation loop: {e}")
                 await asyncio.sleep(5) # Brief pause before retry
-
     
+
     logger.info("--- Phase: Voiceover Generation ---")
     audio_file = await Voice().generate_audio(validated_fact)
 

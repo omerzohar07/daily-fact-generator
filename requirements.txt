@@ -8,3 +8,4 @@ requests
 retry
 google-auth-oauthlib
 google-api-python-client
+openai
